@@ -116,7 +116,7 @@ try {
 try {
     $tools = Invoke-McpJsonRpc -Id 2 -Method 'tools/list'
     $count = @($tools.result.tools).Count
-    Assert-Test 'MCP tools/list' ($count -eq 9) "(returned $count tools)"
+    Assert-Test 'MCP tools/list' ($count -eq 12) "(returned $count tools)"
 } catch {
     Assert-Test 'MCP tools/list' $false $_.Exception.Message
 }
@@ -195,6 +195,53 @@ foreach ($toolName in $arrayTools) {
         Assert-Test "MCP tools/call $toolName" $false $_.Exception.Message
     }
     $arrayToolId++
+}
+
+try {
+    $call = Invoke-McpJsonRpc -Id 20 -Method 'tools/call' -Params @{
+        name      = 'vsphere_list_tags'
+        arguments = @{}
+    }
+    $count = [int]$call.result.structuredContent.count
+    Assert-Test 'MCP tools/call vsphere_list_tags' ((-not [bool]$call.result.isError) -and ($count -gt 0)) "tag count: $count"
+} catch {
+    Assert-Test 'MCP tools/call vsphere_list_tags' $false $_.Exception.Message
+}
+
+try {
+    $call = Invoke-McpJsonRpc -Id 21 -Method 'tools/call' -Params @{
+        name      = 'vsphere_list_vm_tags'
+        arguments = @{ limit = 5 }
+    }
+    $sc = $call.result.structuredContent
+    $ok = (-not [bool]$call.result.isError) -and ([int]$sc.totalVms -gt 0) -and (@($sc.vms).Count -le 5)
+    Assert-Test 'MCP tools/call vsphere_list_vm_tags' $ok "totalVms: $($sc.totalVms), returned: $(@($sc.vms).Count)"
+} catch {
+    Assert-Test 'MCP tools/call vsphere_list_vm_tags' $false $_.Exception.Message
+}
+
+try {
+    $call = Invoke-McpJsonRpc -Id 22 -Method 'tools/call' -Params @{
+        name      = 'vsphere_list_vm_details'
+        arguments = @{ limit = 5 }
+    }
+    $sc = $call.result.structuredContent
+    $first = @($sc.vms) | Select-Object -First 1
+    $ok = (-not [bool]$call.result.isError) -and ([int]$sc.count -gt 0) -and $first.name -and $first.datacenter
+    Assert-Test 'MCP tools/call vsphere_list_vm_details' $ok "count: $($sc.count), first: $($first.name) in $($first.datacenter)/$($first.cluster) created $($first.created)"
+} catch {
+    Assert-Test 'MCP tools/call vsphere_list_vm_details' $false $_.Exception.Message
+}
+
+try {
+    $call = Invoke-McpJsonRpc -Id 23 -Method 'tools/call' -Params @{
+        name      = 'vsphere_list_vm_details'
+        arguments = @{ created_after = 'not-a-date' }
+    }
+    $text = Get-CallText $call
+    Assert-Test 'Invalid created_after gives a clear error' ([bool]$call.result.isError -and ($text -match 'ISO 8601')) $text
+} catch {
+    Assert-Test 'Invalid created_after gives a clear error' $false $_.Exception.Message
 }
 
 try {

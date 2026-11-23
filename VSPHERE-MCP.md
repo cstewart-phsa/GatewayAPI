@@ -155,6 +155,9 @@ All current vSphere tools are read-only:
 - `vsphere_list_datastores`
 - `vsphere_list_networks`
 - `vsphere_list_datacenters`
+- `vsphere_list_tags`
+- `vsphere_list_vm_tags`
+- `vsphere_list_vm_details`
 
 Read-only users see and can call all of them. There are no admin-only vSphere
 tools today. If a future upstream tool is mutating, it remains hidden from
@@ -163,7 +166,9 @@ read-only allowlist in `http_bridge.py`.
 
 The bridge enforces `readOnlyHint: true` and `destructiveHint: false` on every
 tool it advertises to read-only users. The source MCP has no generic request
-tool and accepts no arbitrary API path or HTTP method.
+tool and accepts no arbitrary API path or HTTP method. Its only upstream POSTs
+are session login/logout and a fixed allowlist of read-only calls (tag
+associations and VI/JSON property retrieval); see `vsphere-mcp/README.md`.
 
 ---
 

@@ -109,6 +109,9 @@ READ_ONLY_TOOLS = {
     "vsphere_list_datastores",
     "vsphere_list_networks",
     "vsphere_list_datacenters",
+    "vsphere_list_tags",
+    "vsphere_list_vm_tags",
+    "vsphere_list_vm_details",
 }
 
 PLACEHOLDER_PREFIXES = ("${", "{env:")
